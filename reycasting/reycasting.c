@@ -6,7 +6,7 @@
 /*   By: maneddam <marvin@42>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/11 14:35:47 by maneddam          #+#    #+#             */
-/*   Updated: 2023/08/16 19:33:01 by maneddam         ###   ########.fr       */
+/*   Updated: 2023/08/18 12:51:00 by maneddam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,17 @@ void	drawSpace(t_mlx_data *m, int x, int y)
 	}
 
 }
+void circle(t_mlx_data *m, int x, int y, int radius, int color) {
+  int i, j;
+
+  for (i = -radius; i <= radius; i++) {
+    for (j = -radius; j <= radius; j++) {
+      if (i * i + j * j <= radius * radius) {
+        my_mlx_pixel_put(m, x + i, y + j , color);
+      }
+    }
+  }
+}
 
 void	drawSquare(t_mlx_data *m, int x, int y)
 {
@@ -67,6 +78,48 @@ void	drawSquare(t_mlx_data *m, int x, int y)
 	}
 
 }
+void get_second_point(t_mlx_data *m)
+{
+	if (m->inf->p.rotationAngle < (M_PI / 2) && m->inf->p.rotationAngle > ((M_PI * 3) / 2))
+		m->inf->p.x_direction = 1;
+	if (m->inf->p.rotationAngle < (3 * M_PI / 2) && m->inf->p.rotationAngle > (M_PI / 2))
+		m->inf->p.x_direction = -1;
+
+	if (m->inf->p.rotationAngle < (M_PI * 2) && m->inf->p.rotationAngle > (M_PI))
+		m->inf->p.y_direction = 1;
+	if (m->inf->p.rotationAngle < M_PI && m->inf->p.rotationAngle > 0)
+		m->inf->p.y_direction = -1;
+
+	m->inf->p.m->x = m->inf->p.stepMoveX + (cos(m->inf->p.rotationAngle) * 30) * m->inf->p.x_direction;
+	m->inf->p.m->y = m->inf->p.stepMoveY + (sin(m->inf->p.rotationAngle) * 30) * m->inf->p.y_direction;
+}
+
+void drawLine(t_mlx_data *m)
+{
+	int s;
+	int k;
+
+	get_second_point(m);
+	printf("mx : %f\nmy : %f\n",m->inf->p.m->x, m->inf->p.m->y);
+	k = 0;
+	while(k < m->inf->y_len * 60 )
+	{
+		s = 0;
+		if (k == m->inf->p.m->y - 1 || k == m->inf->p.m->y || k == m->inf->p.m->y + 1)
+		{
+			while(s < m->inf->max_len * 60)
+			{
+				if (s == m->inf->p.m->x - 1 || s == m->inf->p.m->x || s == m->inf->p.m->x + 1)
+				{
+					my_mlx_pixel_put(m, s , k, 0xFFFFFF);
+				}
+				s++;
+			}
+		}
+		k++;
+	}
+}
+
 
 void	drawPlayer(t_mlx_data *m, int x, int y)
 {
@@ -80,7 +133,7 @@ void	drawPlayer(t_mlx_data *m, int x, int y)
 	// color = encode_rgb(0, 255, 128);
 	// middleX = m->inf->max_len * 60/2;
 	// middleY = m->inf->y_len * 60/2;
-	printf("stepx %f\nstepy : %f\n", m->inf->p.stepMoveX, m->inf->p.stepMoveY);
+	// printf("stepx %f\nstepy : %f\n", m->inf->p.stepMoveX, m->inf->p.stepMoveY);
 	k = 0;
 	while (k < m->inf->y_len * 60)
 	{
@@ -92,6 +145,8 @@ void	drawPlayer(t_mlx_data *m, int x, int y)
 				if (s == m->inf->p.stepMoveX - 1 || s == m->inf->p.stepMoveX  || s == m->inf->p.stepMoveX + 1)
 				{
 					my_mlx_pixel_put(m, s , k, 0xFFFFFF);
+
+					// circle(m, m->inf->p.stepMoveX, m->inf->p.stepMoveY, 3, 0xFFFFFF);
 				}
 				s++;
 			}
@@ -99,12 +154,9 @@ void	drawPlayer(t_mlx_data *m, int x, int y)
 		k++;
 	}
 
-	// my_mlx_pixel_put(m,  x * 60, y* 60, 0xFFFFFF);
-	// my_mlx_pixel_put(m,  x, y + 1, 0xFFFFFF);
-	// my_mlx_pixel_put(m,  x + 3, y + 3, 0xFFFFFF);
-	// my_mlx_pixel_put(m,  x + 4, y + 4, 0xFFFFFF);
 
 
+	drawLine(m);
 
 }
 
@@ -157,10 +209,17 @@ bool hasWallat(t_mlx_data *m, double x, double y)
 	gridY = floor(y / 60);
 	return m->inf->map2d[gridY][gridX] == '1';
 }
+int	keyRelease(int keycode, t_mlx_data *m)
+{
+	(void)keycode;
+	m->inf->p.x_direction = 0;
+	m->inf->p.y_direction = 0;
+	return 0;
+}
 
 int	move(int keycode, t_mlx_data *m)
 {
-	
+	printf("%d\n", keycode);
 	if (keycode == ESC)
 	{
 		printf("You closed the game using ESC key !");
@@ -169,7 +228,7 @@ int	move(int keycode, t_mlx_data *m)
 	}
 	if (keycode == W)
 	{
-		if (hasWallat(m, m->inf->p.stepMoveX, m->inf->p.stepMoveY - 4))
+		if (hasWallat(m, m->inf->p.stepMoveX, m->inf->p.stepMoveY - (SPEED + 1)))
 		{
 			printf("WALL\n");
 			return 0;
@@ -178,7 +237,7 @@ int	move(int keycode, t_mlx_data *m)
 	}
 	if (keycode == S)
 	{
-		if (hasWallat(m, m->inf->p.stepMoveX, m->inf->p.stepMoveY + 3))
+		if (hasWallat(m, m->inf->p.stepMoveX, m->inf->p.stepMoveY + SPEED))
 		{
 			printf("WALL\n");
 			return 0;
@@ -187,7 +246,7 @@ int	move(int keycode, t_mlx_data *m)
 	}
 	if (keycode == D)
 	{
-		if (hasWallat(m, m->inf->p.stepMoveX + 3, m->inf->p.stepMoveY))
+		if (hasWallat(m, m->inf->p.stepMoveX + SPEED, m->inf->p.stepMoveY))
 		{
 			printf("WALL\n");
 			return 0;
@@ -196,17 +255,25 @@ int	move(int keycode, t_mlx_data *m)
 	}
 	if (keycode == A)
 	{
-		if (hasWallat(m, m->inf->p.stepMoveX - 4, m->inf->p.stepMoveY))
+		if (hasWallat(m, m->inf->p.stepMoveX - (SPEED + 1), m->inf->p.stepMoveY))
 		{
 			printf("WALL\n");
 			return 0;
 		}
 		m->inf->p.stepMoveX -= SPEED;
 	}
+	if (keycode == LEFT)
+	{
+		printf("hahaha\n");
+		m->inf->p.rotationAngle += M_PI / 8;
+	}
 
 	displayMap(m, m->inf);
 
-	
+	m->inf->p.x_direction = 0;
+	m->inf->p.y_direction = 0;
+	if (m->inf->p.rotationAngle == 2 * M_PI)
+		m->inf->p.rotationAngle = 0;
 	// drawPlayer(m, m->inf->p.y , m->inf->p.x );
 	return 0;
 }
@@ -218,7 +285,7 @@ void draw_ori_ray(t_mlx_data *mlx, int i, int j)
 
 	// printf("i : %d\nj : %d\n", i, j);
 	// printf("map2d[i] : %c\n", mlx->inf->map2d[i][]);
-	
+
 	while(mlx->inf->map2d[i])
 	{
 		k = 0;
@@ -244,7 +311,7 @@ void draw_ori_ray(t_mlx_data *mlx, int i, int j)
 	}
 }
 
-double get_decimal_number(double a)  
+double get_decimal_number(double a)
 {
 	double b;
 
@@ -288,8 +355,10 @@ void	reycasting(t_infos *inf)
 	t_mlx_data	mlx;
 
 	inf->p = player_pos(inf->map2d);
-
-
+	inf->p.x_direction = 0;
+	inf->p.y_direction = 0;
+	// ! N E W S
+	inf->p.rotationAngle = 0;
 
 	mlx.inf = inf;
 	mlx.map2d = inf->map2d;
@@ -308,7 +377,8 @@ void	reycasting(t_infos *inf)
 	mlx.inf->p.stepMoveY = mlx.inf->p.y * 60;
 	displayMap(&mlx, inf);
 
-	mlx_hook(mlx.wind_ptr, 2, 3, move, &mlx);
+	mlx_hook(mlx.wind_ptr, 2, 1L<<0, move, &mlx);
+	// mlx_hook(mlx.wind_ptr, 3, 1L<<1, keyRelease, &mlx);
 	mlx_loop(mlx.mlx_ptr);
 
 }

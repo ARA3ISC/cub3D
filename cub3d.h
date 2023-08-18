@@ -6,7 +6,7 @@
 /*   By: maneddam <marvin@42>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/04 16:41:47 by maneddam          #+#    #+#             */
-/*   Updated: 2023/08/16 19:31:46 by maneddam         ###   ########.fr       */
+/*   Updated: 2023/08/18 12:24:31 by maneddam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,11 +39,16 @@
 # define A 97
 # define S 115
 # define RIGHT 124
-# define LEFT 123
+# define LEFT 65361
 # define UP 126
 # define DOWN 125
-# define SPEED 3
+# define SPEED 5
 
+typedef struct s_point
+{
+	double x;
+	double y;
+}	t_point;
 
 typedef struct s_player
 {
@@ -55,6 +60,11 @@ typedef struct s_player
 	double	y_tmp;
 	double stepMoveX;
 	double stepMoveY;
+
+	int x_direction;
+	int y_direction;
+	double rotationAngle;
+	t_point *m;
 }				t_player;
 
 typedef struct s_mlx_data
@@ -69,7 +79,7 @@ typedef struct s_mlx_data
 	int		line_length;
 	int		endian;
 	char	*addr;
-	
+
 }				t_mlx_data;
 
 typedef struct s_infos
